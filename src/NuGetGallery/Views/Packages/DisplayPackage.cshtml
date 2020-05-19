@@ -546,6 +546,7 @@
                     }
                 }
             }
+<<<<<<< Updated upstream
 
 
             @if (Model.packageDependents != null && Model.IsPackageDependentsEnabled)
@@ -621,9 +622,10 @@
                     <a href="#" role="button" data-toggle="collapse" data-target="#github-usage"
                        aria-expanded="false" aria-controls="github-usage" id="show-github-usage">
                         <i class="ms-Icon ms-Icon--ChevronRight" aria-hidden="true"></i>
-                        <span>GitHub Usage</span>
+                        <span>Used By</span>
                     </a>
                 </h2>
+
                 if (Model.GitHubDependenciesInformation.Repos.Any())
                 {
                     <div class="github-usage panel-collapse collapse" aria-expanded="true" id="github-usage">
@@ -664,14 +666,15 @@
                             <a href="https://docs.microsoft.com/en-us/nuget/consume-packages/finding-and-choosing-packages#evaluating-packages" title="Read more about the GitHub Usage information">our documentation</a>.
                         </p>
                     </div>
-                }
-                else
-                {
-                    <p class="github-usage panel-collapse collapse" aria-expanded="true" id="github-usage">
-                        This package is not used by any popular GitHub repositories.
-                    </p>
-                }
-            }
+
+                    }
+                    else
+                    {
+                        <p class="github-usage panel-collapse collapse" aria-expanded="true" id="github-usage">
+                            This package is not used by any popular GitHub repositories.
+                        </p>
+                    }
+        }
 
             <h2>
                 <a href="#" role="button" data-toggle="collapse" data-target="#version-history"
