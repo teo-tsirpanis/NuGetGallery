@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace NuGetGallery.Services
 {
@@ -169,7 +170,7 @@ namespace NuGetGallery.Services
             {
                 _reportService = new Mock<IReportService>();
 
-                _target = new JsonStatisticsService(_reportService.Object);
+                _target = new JsonStatisticsService(_reportService.Object, Moq.Mock.Of<ILogger<JsonStatisticsService>>());
             }
 
             protected void Mock(

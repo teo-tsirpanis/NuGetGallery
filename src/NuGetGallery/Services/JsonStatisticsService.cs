@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -32,6 +33,8 @@ namespace NuGetGallery
         /// </summary>
         private readonly IReportService _reportService;
 
+        private readonly ILogger<JsonStatisticsService> _logger;
+
         /// <summary>
         /// The semaphore used to update the statistics service's reports.
         /// </summary>
@@ -52,9 +55,12 @@ namespace NuGetGallery
         private readonly List<StatisticsNuGetUsageItem> _nuGetClientVersion = new List<StatisticsNuGetUsageItem>();
         private readonly List<StatisticsWeeklyUsageItem> _last6Weeks = new List<StatisticsWeeklyUsageItem>();
 
-        public JsonStatisticsService(IReportService reportService)
+        public JsonStatisticsService(
+            IReportService reportService,
+            ILogger<JsonStatisticsService> logger)
         {
             _reportService = reportService;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public StatisticsReportResult PackageDownloadsResult { get; private set; }
@@ -96,15 +102,19 @@ namespace NuGetGallery
                 return;
             }
 
+            _logger.LogInformation("Before waiting for semaphore");
             await _reportSemaphore.WaitAsync();
+            _logger.LogInformation("After waiting for semaphore");
 
             try
             {
                 if (!ShouldRefresh())
                 {
+                    _logger.LogInformation("ShouldRefresh is now false");
                     return;
                 }
 
+                _logger.LogInformation("Before sending load requests");
                 var availablity = await Task.WhenAll(
                     LoadDownloadPackages(),
                     LoadDownloadPackageVersions(),
@@ -112,6 +122,7 @@ namespace NuGetGallery
                     LoadDownloadCommunityPackageVersions(),
                     LoadNuGetClientVersion(),
                     LoadLast6Weeks());
+                _logger.LogInformation("After sending load requests");
 
                 PackageDownloadsResult = availablity[0];
                 PackageVersionDownloadsResult = availablity[1];
@@ -120,16 +131,21 @@ namespace NuGetGallery
                 NuGetClientVersionResult = availablity[4];
                 Last6WeeksResult = availablity[5];
 
+                _logger.LogInformation("Updated cached values");
+
                 LastUpdatedUtc = availablity
                     .Where(r => r.LastUpdatedUtc.HasValue)
                     .OrderByDescending(r => r.LastUpdatedUtc.Value)
                     .Select(r => r.LastUpdatedUtc)
                     .FirstOrDefault();
 
+                _logger.LogInformation("Updated LastUpdatedUtc: {LastUpdatedUtc}", LastUpdatedUtc);
+
                 _lastRefresh = DateTime.UtcNow;
             }
             finally
             {
+                _logger.LogInformation("Releasing semaphore");
                 _reportSemaphore.Release();
             }
         }

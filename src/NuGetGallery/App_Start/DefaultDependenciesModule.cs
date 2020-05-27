@@ -1362,7 +1362,12 @@ namespace NuGetGallery
                 .SingleInstance();
 
             // when running on Windows Azure, pull the statistics from the warehouse via storage
-            builder.RegisterInstance(new CloudReportService(configuration.Current.AzureStorage_Statistics_ConnectionString, configuration.Current.AzureStorageReadAccessGeoRedundant))
+            builder
+                .Register(
+                    ctx => new CloudReportService(
+                        configuration.Current.AzureStorage_Statistics_ConnectionString,
+                        configuration.Current.AzureStorageReadAccessGeoRedundant,
+                        ctx.Resolve<ILogger<CloudReportService>>()))
                 .AsSelf()
                 .As<IReportService>()
                 .SingleInstance();

@@ -15,6 +15,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 using Autofac;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using NuGet.Packaging;
@@ -2780,7 +2781,7 @@ namespace NuGetGallery
 
                 var controller = new TestableApiController(GetConfigurationService())
                 {
-                    StatisticsService = new JsonStatisticsService(fakeReportService.Object),
+                    StatisticsService = new JsonStatisticsService(fakeReportService.Object, Mock.Of<ILogger<JsonStatisticsService>>()),
                 };
 
                 TestUtility.SetupUrlHelperForUrlGeneration(controller);
@@ -2831,7 +2832,7 @@ namespace NuGetGallery
 
                 var controller = new TestableApiController(GetConfigurationService())
                 {
-                    StatisticsService = new JsonStatisticsService(fakeReportService.Object),
+                    StatisticsService = new JsonStatisticsService(fakeReportService.Object, Mock.Of<ILogger<JsonStatisticsService>>()),
                 };
 
                 TestUtility.SetupUrlHelperForUrlGeneration(controller);
