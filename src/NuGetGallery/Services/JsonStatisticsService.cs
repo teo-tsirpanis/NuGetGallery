@@ -159,7 +159,9 @@ namespace NuGetGallery
                 return true;
             }
 
-            return (_lastRefresh - DateTime.UtcNow) >= _refreshInterval;
+            var shouldRefresh = (_lastRefresh - DateTime.UtcNow) >= _refreshInterval;
+            _logger.LogInformation("ShouldRefresh: _lastRefresh: {LastRefresh}, now: {Now}, _refreshInterval: {RefreshInterval}, result: {ShouldRefresh}", _lastRefresh, DateTime.UtcNow, _refreshInterval, shouldRefresh);
+            return shouldRefresh;
         }
 
         private Task<StatisticsReportResult> LoadDownloadPackages()
