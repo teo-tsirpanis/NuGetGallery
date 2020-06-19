@@ -153,36 +153,100 @@ namespace NuGetGallery
             {
                 throw new ArgumentNullException(nameof(id));
             }
-            
+
             PackageDependents result = new PackageDependents();
-            result.TopPackages = GetListOfDependents(id);
-            result.TotalPackageCount = GetDependentCount(id);
+            using (var connection = _entitiesContext.GetDatabase().Connection)
+            {
+                connection.Open();
+                result.TopPackages = GetListOfDependents(id, connection);
+                result.TotalPackageCount = GetDependentCount(id, connection);
+            }
             return result;
         }
 
-        private IReadOnlyCollection<PackageDependent> GetListOfDependents(string id)
+        private IReadOnlyCollection<PackageDependent> GetListOfDependents(string id, DbConnection connection)
         {
-            var listPackages = (from pd in _entitiesContext.PackageDependencies
-                                join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
-                                join pr in _entitiesContext.PackageRegistrations on p.PackageRegistrationKey equals pr.Key
-                                where p.IsLatestSemVer2 && pd.Id == id
-                                group 1 by new { pr.Id, pr.DownloadCount, pr.IsVerified, p.Description } into ng
-                                orderby ng.Key.DownloadCount descending
-                                select new PackageDependent { Id = ng.Key.Id, DownloadCount = ng.Key.DownloadCount, IsVerified = ng.Key.IsVerified, Description = ng.Key.Description }
-                                ).Take(packagesDisplayed).ToList();
+            using (var command = connection.CreateCommand())
+            {
+                var packageDependentsList = new List<PackageDependent>();
+                command.CommandText = @"SELECT TOP (5) 
+                [Project2].[DownloadCount] AS [DownloadCount], 
+                [Project2].[Id] AS [Id], 
+                [Project2].[IsVerified] AS [IsVerified], 
+                [Project2].[Description] AS [Description]
+                FROM ( SELECT 
+                    [Distinct1].[Description] AS [Description], 
+                    [Distinct1].[Id] AS [Id], 
+                    [Distinct1].[DownloadCount] AS [DownloadCount], 
+                    [Distinct1].[IsVerified] AS [IsVerified]
+                    FROM ( SELECT DISTINCT 
+                        [Filter1].[Description] AS [Description], 
+                        [Extent3].[Id] AS [Id], 
+                        [Extent3].[DownloadCount] AS [DownloadCount], 
+                        [Extent3].[IsVerified] AS [IsVerified]
+                        FROM   (SELECT [Extent1].[Id] AS [Id], [Extent2].[PackageRegistrationKey] AS [PackageRegistrationKey], [Extent2].[Description] AS [Description]
+                            FROM  [dbo].[PackageDependencies] AS [Extent1]
+                            INNER JOIN [dbo].[Packages] AS [Extent2] ON [Extent1].[PackageKey] = [Extent2].[Key]
+                            WHERE [Extent2].[IsLatestSemVer2] = 1 ) AS [Filter1]
+                        INNER JOIN [dbo].[PackageRegistrations] AS [Extent3] ON [Filter1].[PackageRegistrationKey] = [Extent3].[Key]
+                        WHERE ([Filter1].[Id] = @id) OR (([Filter1].[Id] IS NULL) AND (@id IS NULL))
+                    )  AS [Distinct1]
+                )  AS [Project2]
+                ORDER BY [Project2].[DownloadCount] DESC";
 
-            return listPackages;
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@id";
+                parameter.Value = id;
+                command.Parameters.Add(parameter);
+
+                using (DbDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var dependent = new PackageDependent();
+                        dependent.Id = (string)reader["id"];
+                        dependent.DownloadCount = (int)reader["DownloadCount"];
+                        dependent.Description = (string)reader["Description"];
+                        dependent.IsVerified = (bool)reader["IsVerified"]; 
+                        packageDependentsList.Add(dependent);
+                    }
+                }
+                return packageDependentsList;
+            }
         }
 
-        private int GetDependentCount(string id)
+        private int GetDependentCount(string id, DbConnection connection)
         {
-            var totalCount = (from pd in _entitiesContext.PackageDependencies
-                              join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
-                              where pd.Id == id && p.IsLatestSemVer2
-                              group 1 by p.PackageRegistrationKey
-                              ).Count();
+            int result = 0;
 
-            return totalCount;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"SELECT 
+                [GroupBy1].[A1] AS [TotalPackageCount]
+                FROM ( SELECT 
+                    COUNT(1) AS [A1]
+                    FROM ( SELECT DISTINCT 
+                        [Extent2].[PackageRegistrationKey] AS [PackageRegistrationKey]
+                        FROM  [dbo].[PackageDependencies] AS [Extent1]
+                        INNER JOIN [dbo].[Packages] AS [Extent2] ON [Extent1].[PackageKey] = [Extent2].[Key]
+                        WHERE (([Extent1].[Id] = @id) OR (([Extent1].[Id] IS NULL) AND (@id IS NULL))) AND ([Extent2].[IsLatestSemVer2] = 1)
+                    )  AS [Distinct1]
+                )  AS [GroupBy1]";
+
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@id";
+                parameter.Value = id;
+
+                command.Parameters.Add(parameter);
+                using (DbDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        result = (int)reader["TotalPackageCount"];
+                    }
+                }
+            }
+            return result;
         }
 
         public virtual IReadOnlyCollection<Package> FindPackagesById(
