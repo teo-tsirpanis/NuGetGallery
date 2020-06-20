@@ -1705,7 +1705,7 @@
   <ItemGroup>
     <Content Include="App_Offline-Planned.htm" />
     <Content Include="App_Offline-Unplanned.htm" />
-    <Content Include="startup.html" />
+    <Content Include="Public\startup.html" />
     <Content Include="Areas\Admin\DynamicData\Content\GridViewPager.ascx" />
     <Content Include="Areas\Admin\DynamicData\Content\Images\Back.gif" />
     <Content Include="Areas\Admin\DynamicData\Content\Images\header_back.gif" />
