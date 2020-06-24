@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>SlowEfQuery</id>
+    <version>$version$</version>
+    <authors>David</authors>
+    <description>Minimal repro for slow EF query.</description>
+  </metadata>
+   <files>
+    <file src="bin\$configuration$\**\*.*" target="bin"/>
+  </files>
+</package>
