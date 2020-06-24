@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubVulnerabilities2Db", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubVulnerabilities2Db.Facts", "tests\GitHubVulnerabilities2Db.Facts\GitHubVulnerabilities2Db.Facts.csproj", "{E50953CB-209A-484E-951D-A68F5CF3C546}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlowEfQuery", "src\SlowEfQuery\SlowEfQuery.csproj", "{285A0E7A-B4F5-4C78-B233-F204454E7BD0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,10 @@ Global
 		{E50953CB-209A-484E-951D-A68F5CF3C546}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E50953CB-209A-484E-951D-A68F5CF3C546}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E50953CB-209A-484E-951D-A68F5CF3C546}.Release|Any CPU.Build.0 = Release|Any CPU
+		{285A0E7A-B4F5-4C78-B233-F204454E7BD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{285A0E7A-B4F5-4C78-B233-F204454E7BD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{285A0E7A-B4F5-4C78-B233-F204454E7BD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{285A0E7A-B4F5-4C78-B233-F204454E7BD0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -146,6 +152,7 @@ Global
 		{98765110-844D-41BE-8083-22E064136E05} = {39E54EC3-CBAA-453A-BE64-748FE1559A58}
 		{26BB718A-E1C1-4E70-9008-FB8EE7A7F7E5} = {2204C510-A559-4ED7-9590-FDC09093575B}
 		{E50953CB-209A-484E-951D-A68F5CF3C546} = {39E54EC3-CBAA-453A-BE64-748FE1559A58}
+		{285A0E7A-B4F5-4C78-B233-F204454E7BD0} = {2204C510-A559-4ED7-9590-FDC09093575B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {064A3BDE-5203-4AD6-A6C9-5CF08301EC8F}
