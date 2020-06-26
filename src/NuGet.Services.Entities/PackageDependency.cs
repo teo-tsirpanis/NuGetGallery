@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NuGet.Services.Entities
 {
@@ -17,7 +16,6 @@ namespace NuGet.Services.Entities
         ///     we cannot mandate that it is required.
         /// </remarks>
         [StringLength(Constants.MaxPackageIdLength)]
-        [Column(TypeName = "varchar")]
         public string Id { get; set; }
 
         [StringLength(256)]
