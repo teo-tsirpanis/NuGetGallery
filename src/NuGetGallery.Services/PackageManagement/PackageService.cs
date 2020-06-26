@@ -169,30 +169,13 @@ namespace NuGetGallery
             using (var command = connection.CreateCommand())
             {
                 var packageDependentsList = new List<PackageDependent>();
-                command.CommandText = @"SELECT TOP (5) 
-                [Project2].[DownloadCount] AS [DownloadCount], 
-                [Project2].[Id] AS [Id], 
-                [Project2].[IsVerified] AS [IsVerified], 
-                [Project2].[Description] AS [Description]
-                FROM ( SELECT 
-                    [Distinct1].[Description] AS [Description], 
-                    [Distinct1].[Id] AS [Id], 
-                    [Distinct1].[DownloadCount] AS [DownloadCount], 
-                    [Distinct1].[IsVerified] AS [IsVerified]
-                    FROM ( SELECT DISTINCT 
-                        [Filter1].[Description] AS [Description], 
-                        [Extent3].[Id] AS [Id], 
-                        [Extent3].[DownloadCount] AS [DownloadCount], 
-                        [Extent3].[IsVerified] AS [IsVerified]
-                        FROM   (SELECT [Extent1].[Id] AS [Id], [Extent2].[PackageRegistrationKey] AS [PackageRegistrationKey], [Extent2].[Description] AS [Description]
-                            FROM  [dbo].[PackageDependencies] AS [Extent1]
-                            INNER JOIN [dbo].[Packages] AS [Extent2] ON [Extent1].[PackageKey] = [Extent2].[Key]
-                            WHERE [Extent2].[IsLatestSemVer2] = 1 ) AS [Filter1]
-                        INNER JOIN [dbo].[PackageRegistrations] AS [Extent3] ON [Filter1].[PackageRegistrationKey] = [Extent3].[Key]
-                        WHERE ([Filter1].[Id] = @id) OR (([Filter1].[Id] IS NULL) AND (@id IS NULL))
-                    )  AS [Distinct1]
-                )  AS [Project2]
-                ORDER BY [Project2].[DownloadCount] DESC";
+                command.CommandText = @"SELECT TOP 5 PackageRegistrations.id, PackageRegistrations.DownloadCount, PackageRegistrations.IsVerified, Packages.Description
+	                FROM PackageDependencies 
+	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
+	                INNER JOIN PackageRegistrations ON Packages.PackageRegistrationKey = PackageRegistrations.[key]
+	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1
+	                GROUP BY PackageRegistrations.id, PackageRegistrations.DownloadCount, PackageRegistrations.IsVerified, Packages.Description
+                    ORDER BY PackageRegistrations.DownloadCount DESC";
 
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@id";
@@ -221,17 +204,10 @@ namespace NuGetGallery
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = @"SELECT 
-                [GroupBy1].[A1] AS [TotalPackageCount]
-                FROM ( SELECT 
-                    COUNT(1) AS [A1]
-                    FROM ( SELECT DISTINCT 
-                        [Extent2].[PackageRegistrationKey] AS [PackageRegistrationKey]
-                        FROM  [dbo].[PackageDependencies] AS [Extent1]
-                        INNER JOIN [dbo].[Packages] AS [Extent2] ON [Extent1].[PackageKey] = [Extent2].[Key]
-                        WHERE (([Extent1].[Id] = @id) OR (([Extent1].[Id] IS NULL) AND (@id IS NULL))) AND ([Extent2].[IsLatestSemVer2] = 1)
-                    )  AS [Distinct1]
-                )  AS [GroupBy1]";
+                command.CommandText = @"SELECT COUNT(Distinct Packages.PackageRegistrationKey) AS TotalPackageCount
+	                FROM PackageDependencies 
+	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
+	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1";
 
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@id";
