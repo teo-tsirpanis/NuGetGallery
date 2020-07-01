@@ -45,39 +45,57 @@ namespace SlowEfQuery
             using (var connection = connFactory.CreateAsync().Result)
             using (var entitiesContext = new EntitiesContext(connection, readOnly: true))
             {
+                Console.WriteLine("Top 5 query");
+                Console.WriteLine("===========");
+
                 var stopwatch = Stopwatch.StartNew();
-                Output(WithRawSql(id, entitiesContext, parameterSize: 128));
-                Console.WriteLine($"Raw SQL - NVARCHAR(128): {stopwatch.Elapsed}");
-                Console.WriteLine();
+                // Top5WithRawSql(id, entitiesContext, parameterSize: 128);
+                // Console.WriteLine($"Raw SQL - NVARCHAR(128): {stopwatch.Elapsed}");
+                // Console.WriteLine();
 
                 stopwatch.Restart();
-                Output(WithRawSql(id, entitiesContext, parameterSize: 4000));
+                Top5WithRawSql(id, entitiesContext, parameterSize: 4000);
                 Console.WriteLine($"Raw SQL - NVARCHAR(4000): {stopwatch.Elapsed}");
                 Console.WriteLine();
 
                 stopwatch.Restart();
-                Output(WithEntityFramework(id, entitiesContext));
-                Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
+                // Top5WithEntityFramework(id, entitiesContext);
+                // Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
+                // Console.WriteLine();
+
+                stopwatch.Restart();
+                // Top5WithEntityFramework(id, entitiesContext);
+                // Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
+                // Console.WriteLine();
+
+                Console.WriteLine("Total count query");
+                Console.WriteLine("=================");
+
+                stopwatch.Restart();
+                // TotalCountWithRawSql(id, entitiesContext, parameterSize: 128);
+                // Console.WriteLine($"Raw SQL - NVARCHAR(128): {stopwatch.Elapsed}");
+                // Console.WriteLine();
+
+                stopwatch.Restart();
+                TotalCountWithRawSql(id, entitiesContext, parameterSize: 4000);
+                Console.WriteLine($"Raw SQL - NVARCHAR(4000): {stopwatch.Elapsed}");
                 Console.WriteLine();
 
                 stopwatch.Restart();
-                Output(WithEntityFramework(id, entitiesContext));
-                Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
-                Console.WriteLine();
+                // TotalCountWithEntityFramework(id, entitiesContext);
+                // Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
+                // Console.WriteLine();
+
+                stopwatch.Restart();
+                // TotalCountWithEntityFramework(id, entitiesContext);
+                // Console.WriteLine($"LINQ: {stopwatch.Elapsed}");
+                // Console.WriteLine();
             }
 
             return 0;
         }
 
-        public static void Output(List<PackageDependent> packageDependents)
-        {
-            foreach (var pd in packageDependents)
-            {
-                Console.WriteLine($"{pd.Id} - description is {pd.Description.Length} characters - {pd.DownloadCount} downloads - {(pd.IsVerified ? "verified" : "not verified")}");
-            }
-        }
-
-        private static List<PackageDependent> WithRawSql(string id, EntitiesContext entitiesContext, int parameterSize)
+        private static List<PackageDependent> Top5WithRawSql(string id, EntitiesContext entitiesContext, int parameterSize)
         {
             var connection = entitiesContext.Database.Connection;
             if (connection.State != ConnectionState.Open)
@@ -111,7 +129,8 @@ namespace SlowEfQuery
             WHERE ([Filter1].[Id] = @p__linq__0) OR (([Filter1].[Id] IS NULL) AND (@p__linq__0 IS NULL))
         )  AS [Distinct1]
     )  AS [Project2]
-    ORDER BY [Project2].[DownloadCount] DESC";
+    ORDER BY [Project2].[DownloadCount] DESC
+    OPTION ( OPTIMIZE FOR UNKNOWN )";
 
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@p__linq__0";
@@ -136,7 +155,48 @@ namespace SlowEfQuery
             }
         }
 
-        private static List<PackageDependent> WithEntityFramework(string id, EntitiesContext entitiesContext)
+        private static int TotalCountWithRawSql(string id, EntitiesContext entitiesContext, int parameterSize)
+        {
+            var connection = entitiesContext.Database.Connection;
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"SELECT 
+    [GroupBy1].[A1] AS [C1]
+    FROM ( SELECT 
+        COUNT(1) AS [A1]
+        FROM ( SELECT DISTINCT 
+            [Extent2].[PackageRegistrationKey] AS [PackageRegistrationKey]
+            FROM  [dbo].[PackageDependencies] AS [Extent1]
+            INNER JOIN [dbo].[Packages] AS [Extent2] ON [Extent1].[PackageKey] = [Extent2].[Key]
+            WHERE (([Extent1].[Id] = @p__linq__0) OR (([Extent1].[Id] IS NULL) AND (@p__linq__0 IS NULL))) AND ([Extent2].[IsLatestSemVer2] = 1)
+        )  AS [Distinct1]
+    )  AS [GroupBy1]
+    OPTION ( OPTIMIZE FOR UNKNOWN )";
+
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@p__linq__0";
+                parameter.Value = id;
+                parameter.Size = parameterSize;
+                command.Parameters.Add(parameter);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        return (int)reader["C1"];
+                    }
+                }
+
+                return 0;
+            }
+        }
+
+        private static List<PackageDependent> Top5WithEntityFramework(string id, EntitiesContext entitiesContext)
         {
             int packagesDisplayed = 5;
             var listPackages = (from pd in entitiesContext.PackageDependencies
@@ -149,6 +209,17 @@ namespace SlowEfQuery
                                 ).Take(packagesDisplayed).ToList();
 
             return listPackages;
+        }
+
+        private static int TotalCountWithEntityFramework(string id, EntitiesContext entitiesContext)
+        {
+            var totalCount = (from pd in entitiesContext.PackageDependencies
+                              join p in entitiesContext.Packages on pd.PackageKey equals p.Key
+                              where pd.Id == id && p.IsLatestSemVer2
+                              group 1 by p.PackageRegistrationKey
+                              ).Count();
+
+            return totalCount;
         }
     }
 }
