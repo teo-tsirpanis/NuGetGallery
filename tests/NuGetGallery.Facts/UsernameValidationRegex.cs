@@ -60,7 +60,7 @@ namespace NuGetGallery
             return Enumerable.Range(0, TestCharSetSize)
                       .Select(i => (char)i)
                       .Where(c => !GetAllowedMiddleCharacters().Contains(c))
-                      .Select(c => new object[] { c }); ;
+                      .Select(c => new object[] { c });
         }
 
         public static IEnumerable<object[]> GetAllowedShortUsername()
@@ -107,7 +107,7 @@ namespace NuGetGallery
             {
                 yield return otherAllowed;
             }
-            
+
         }
     }
 }
