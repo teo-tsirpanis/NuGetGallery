@@ -23,7 +23,7 @@ x64/
 [Oo]bj/
 
 # Files created and used by our build scripts
-build/ 
+build/
 tools/
 .nuget/credprovider
 .nuget/.marker.v*
@@ -180,7 +180,7 @@ Results.?.xml
 
 # Vs2015
 # The applicationhost.config is ignored, but already comitted on purpose
-# Reason: The localtest.me setting needs to be configured in the <sites>-section. 
+# Reason: The localtest.me setting needs to be configured in the <sites>-section.
 # See ReadMe.md for more information
 .vs/config/applicationhost.config
 artifacts/
@@ -190,3 +190,6 @@ artifacts/
 src/NuGetGallery/Content/gallery/css/bootstrap-theme.css
 src/NuGetGallery/Content/gallery/css/bootstrap.css
 src/NuGetGallery/Scripts/gallery/bootstrap.js
+
+.ionide/
+.idea/
